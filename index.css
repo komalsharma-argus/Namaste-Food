@@ -76,3 +76,56 @@
 .filter{
     display: flex;
 }
+
+.res-link { 
+    text-decoration: none; 
+    color: inherit; 
+}
+
+.nav-items a { 
+    text-decoration: none; 
+    color: inherit; 
+}
+
+.menu { 
+    max-width: 800px; 
+    margin: 20px auto; 
+    padding: 0 16px; 
+}
+
+.category { 
+    border-bottom: 8px solid #eee; 
+    margin: 12px 0; 
+}
+
+.category-header { 
+    display: flex; 
+    justify-content: space-between; 
+    padding: 12px; 
+    cursor: pointer; 
+    font-weight: bold; 
+    background: #f7f7f7; 
+}
+
+.menu-item { 
+    display: flex; 
+    justify-content: space-between; 
+    gap: 16px; 
+    padding: 14px 8px; 
+    border-bottom: 1px solid #ddd; 
+}
+
+.menu-item-text { 
+    flex: 1; 
+    text-align: left; 
+}
+
+.menu-item-img { 
+    width: 120px; 
+    text-align: center; 
+}
+
+.menu-item-img img { 
+    width: 100%; 
+    border-radius: 8px; 
+}

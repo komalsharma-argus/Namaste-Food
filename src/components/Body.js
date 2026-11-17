@@ -1,73 +1,88 @@
-import RestaurantCard from "./RestaurantCard";
 import { useState, useEffect } from "react";
-import resList from "../../utils/mockData";
+import { Link } from "react-router-dom";
+import RestaurantCard from "./RestaurantCard";
 import Shimmer from "./Shimmer";
+import { RESTAURANT_LIST_URL } from "../../utils/constants";
+import useOnlineStatus from "../../utils/useOnlineStatus";
 
 const Body = () => {
-    const [listOfRestaurants, setListOfRestaurants] = useState([]);
-    const [filteredRestaurant, setFilteredRestaurant] = useState([]);
+  const [listOfRestaurants, setListOfRestaurants] = useState([]);
+  const [filteredRestaurants, setFilteredRestaurants] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [error, setError] = useState(null);
+  const onlineStatus = useOnlineStatus();
 
-    const [searchText, setSearchText] = useState("");
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+  const fetchData = async () => {
+    try {
+      const res = await fetch(RESTAURANT_LIST_URL);
+      if (!res.ok) throw new Error("Request failed: " + res.status);
+      const json = await res.json();
+      const cards = json?.data?.data?.cards || json?.data?.cards || [];
+      const restaurants = (
+        cards
+          .map((c) => c?.card?.card?.gridElements?.infoWithStyle?.restaurants)
+          .find(Boolean) || []
+      ).filter((r) => r?.info?.id);
+      setListOfRestaurants(restaurants);
+      setFilteredRestaurants(restaurants);
+    } catch (e) {
+      setError("Could not load restaurants. Please try again.");
+    }
+  };
 
-    const fetchData = async () => {
-        try {
-        const response = await fetch("http://localhost:5000/api/restaurants?lat=23.02760&lng=72.58710");
+  if (!onlineStatus) return <h1>Looks like you're offline. Check your connection.</h1>;
+  if (error) return <h2>{error}</h2>;
+  if (listOfRestaurants.length === 0) return <Shimmer />;
 
-        const json = await response.json();
-        console.log(json);
-
-        setListOfRestaurants(json?.data?.data?.cards[4]?.card?.card?.gridElements?.infoWithStyle?.restaurants);
-        setFilteredRestaurant(json?.data?.data?.cards[4]?.card?.card?.gridElements?.infoWithStyle?.restaurants);
-
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    return listOfRestaurants.length === 0 ? ( 
-        <Shimmer />
-    ) : (
-        <div className="body">
-            <div className="filter">
-                <div className="search">
-                    <input 
-                    type="text"
-                    className="search-box"
-                    value={searchText}
-                    onChange={(e) => {
-                        setSearchText(e.target.value)
-                    }}
-                    />
-                    <button onClick={() => {
-                        const filteredRestaurant = listOfRestaurants.filter((res) => 
-                            res.info.name.toLowerCase().includes(searchText.toLowerCase())
-                        );
-                        setFilteredRestaurant(filteredRestaurant);
-                    }}
-                    >Search
-                    </button>
-                </div>
-                <button 
-                className="filter-btn"
-                onClick={() => {
-                    const filteredList = listOfRestaurants.filter(
-                        (restaurant) => restaurant.info.avgRating >= 4.2 );
-                    setListOfRestaurants(filteredList);
-                }}
-                >
-                    Top Rated Restaurants
-                </button>
-            </div>
-            <div className="res-container">
-            {filteredRestaurant.map((restaurant) => (
-            <RestaurantCard key={restaurant.info.id} resData={restaurant.info} />
-            ))}
-            </div>
+  return (
+    <div className="body">
+      <div className="filter">
+        <div className="search">
+          <input
+            type="text"
+            className="search-box"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+          <button
+            onClick={() =>
+              setFilteredRestaurants(
+                listOfRestaurants.filter((r) =>
+                  r.info.name.toLowerCase().includes(searchText.toLowerCase())
+                )
+              )
+            }
+          >
+            Search
+          </button>
         </div>
+        <button
+          className="filter-btn"
+          onClick={() =>
+            setFilteredRestaurants(
+              listOfRestaurants.filter((r) => r.info.avgRating > 4.3)
+            )
+          }
+        >
+          Top Rated Restaurants
+        </button>
+      </div>
+      <div className="res-container">
+        {filteredRestaurants.map((restaurant) => (
+          <Link
+            key={restaurant.info.id}
+            to={"/restaurants/" + restaurant.info.id}
+            className="res-link"
+          >
+            <RestaurantCard resData={restaurant} />
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 };
 
